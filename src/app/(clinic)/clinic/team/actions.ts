@@ -161,7 +161,8 @@ export async function assignSpecialist(formData: FormData) {
       .maybeSingle(),
   ]);
 
-  const role = specialist?.clinic_roles as { role_key?: string } | null;
+  const linkedRole = specialist?.clinic_roles;
+  const role = (Array.isArray(linkedRole) ? linkedRole[0] : linkedRole) as { role_key?: string } | null;
   if (!client || role?.role_key !== 'specialist') return { error: 'تعذر التحقق من العميل أو الأخصائي.' };
 
   const { error } = await db

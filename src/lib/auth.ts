@@ -29,7 +29,7 @@ export async function getProfile() {
     .limit(1)
     .maybeSingle();
   const clinicRole = membership?.clinic_roles as { role_key?: string } | null;
-  let role = roleFromKey(clinicRole?.role_key);
+  const role = roleFromKey(clinicRole?.role_key);
 
   if (!role) {
     const { data: legacyProfile } = await supabase

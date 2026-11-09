@@ -28,7 +28,8 @@ export async function getProfile() {
     .eq('status', 'active')
     .limit(1)
     .maybeSingle();
-  const clinicRole = membership?.clinic_roles as { role_key?: string } | null;
+  const linkedRole = membership?.clinic_roles;
+  const clinicRole = (Array.isArray(linkedRole) ? linkedRole[0] : linkedRole) as { role_key?: string } | null;
   const role = roleFromKey(clinicRole?.role_key);
 
   if (!role) {

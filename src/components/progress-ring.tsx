@@ -1,0 +1,4 @@
+export function ProgressRing({ label, value, target, unit, color='#1FA971' }: { label: string; value: number; target: number; unit: string; color?: string }) {
+  const pct = Math.max(0,Math.min(100,target>0?value/target*100:0));
+  return <div className="flex flex-col items-center gap-2"><div className="relative grid h-24 w-24 place-items-center rounded-full" style={{ background: `conic-gradient(${color} ${pct*3.6}deg,#e7eee9 0deg)` }}><div className="grid h-[76px] w-[76px] place-items-center rounded-full bg-white text-center"><div><strong className="block text-lg leading-5">{Math.round(value)}</strong><span className="text-[10px] text-slate-500">{unit}</span></div></div></div><span className="text-sm font-bold">{label}</span><span className="-mt-2 text-xs text-slate-500">من {target} {unit}</span></div>;
+}

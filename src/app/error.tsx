@@ -1,0 +1,2 @@
+'use client';
+export default function GlobalError({reset}:{error:Error&{digest?:string};reset:()=>void}){return <main dir="rtl" className="grid min-h-screen place-items-center p-5"><div className="panel max-w-md text-center"><h1 className="text-xl font-bold">حدث خطأ غير متوقع</h1><p className="my-3 text-slate-500">نعتذر عن ذلك. حاول مرة أخرى.</p><button className="primary-button" onClick={reset}>إعادة المحاولة</button></div></main>}

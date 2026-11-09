@@ -1,0 +1,2 @@
+import { OnboardingForm } from '@/components/onboarding-form';
+export default function OnboardingPage(){return <div className="mx-auto max-w-2xl"><div className="mb-6"><p className="text-sm font-bold text-qawam-500">خطوتك الأولى</p><h1 className="mt-1 text-3xl font-extrabold">خلّينا نتعرف عليك</h1><p className="mt-2 text-slate-500">نستخدم بياناتك لحساب احتياجك اليومي وتخصيص المتابعة.</p></div><OnboardingForm/></div>}

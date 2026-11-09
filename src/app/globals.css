@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; --font-tajawal: 'Tajawal'; }
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #F6FAF8; color: #10281d; font-family: var(--font-tajawal), sans-serif; }
+button,input,select,textarea { font: inherit; }
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible { outline: 3px solid #1FA971; outline-offset: 2px; }
+@layer components {
+  .field-label { @apply mb-1.5 block text-sm font-semibold text-slate-700; }
+  .field { @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 placeholder:text-slate-400; }
+  .primary-button { @apply inline-flex items-center justify-center gap-2 rounded-xl bg-qawam-950 px-5 py-3 font-bold text-white transition hover:bg-qawam-700 disabled:cursor-not-allowed disabled:opacity-60; }
+  .secondary-button { @apply inline-flex items-center justify-center gap-2 rounded-xl border border-qawam-500/20 bg-qawam-50 px-4 py-2.5 font-bold text-qawam-950 transition hover:bg-qawam-100; }
+  .panel { @apply rounded-2xl border border-slate-100 bg-white p-5 shadow-soft; }
+}
+.client-brand { --brand-primary: #0B2E1F; --brand-accent: #1FA971; }
+.client-brand .primary-button { background-color: var(--brand-primary); }
+.client-brand .primary-button:hover { background-color: var(--brand-accent); }
+.client-brand .secondary-button { border-color: color-mix(in srgb, var(--brand-accent), transparent 72%); color: var(--brand-primary); }
+.client-brand a.text-qawam-700, .client-brand .text-qawam-700 { color: var(--brand-accent); }

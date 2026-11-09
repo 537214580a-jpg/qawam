@@ -1,0 +1,2 @@
+import { LoginForm } from '@/components/login-form';
+export default function LoginPage() { return <main className="grid min-h-screen place-items-center bg-qawam-50 px-4"><section className="w-full max-w-md"><div className="mb-7 text-center"><div className="mx-auto mb-4 grid h-16 w-16 place-items-center rounded-2xl bg-qawam-950 text-3xl font-black text-white">ق</div><h1 className="text-3xl font-bold">قوام</h1><p className="mt-2 text-slate-500">رعايتك الغذائية تبدأ بخطوة</p></div><LoginForm /></section></main>; }

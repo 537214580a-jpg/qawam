@@ -1,0 +1,3 @@
+import { getClinicContext } from '@/lib/clinic';
+import { BrandingForm } from '@/components/branding-form';
+export default async function ClinicSettingsPage(){const {clinic}=await getClinicContext();if(!clinic)return <section className="panel">لا توجد عيادة مرتبطة بهذا الحساب.</section>;return <div className="mx-auto max-w-2xl space-y-5"><header><p className="text-sm font-bold text-qawam-500">تخصيص مساحة العيادة</p><h1 className="mt-1 text-3xl font-extrabold">الهوية البصرية</h1><p className="mt-2 text-slate-500">تظهر الألوان والشعار في مساحة العميل المرتبط بعيادتك.</p></header><BrandingForm clinicId={clinic.id} name={clinic.name} primary={clinic.brand_primary} accent={clinic.brand_accent} logoPath={clinic.logo_path}/></div>}

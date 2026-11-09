@@ -1,0 +1,3 @@
+'use client';
+import { ResponsiveContainer,LineChart,Line,XAxis,YAxis,Tooltip,CartesianGrid } from 'recharts';
+export function WeightChart({data}:{data:{date:string;weight:number}[]}){return <div className="h-64 w-full"><ResponsiveContainer width="100%" height="100%"><LineChart data={data} margin={{top:12,right:8,left:0,bottom:4}}><CartesianGrid strokeDasharray="3 3" vertical={false}/><XAxis dataKey="date" tick={{fontSize:11}}/><YAxis domain={['dataMin - 2','dataMax + 2']} tick={{fontSize:11}} width={34}/><Tooltip formatter={(v)=>[`${v} كجم`,'الوزن']}/><Line type="monotone" dataKey="weight" stroke="#1FA971" strokeWidth={3} dot={{r:4}} activeDot={{r:6}}/></LineChart></ResponsiveContainer></div>}

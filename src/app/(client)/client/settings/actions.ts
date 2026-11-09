@@ -1,0 +1,4 @@
+'use server';
+import { revalidatePath } from 'next/cache';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+export async function revokeConsent(){const db=await createSupabaseServerClient();const {data:{user}}=await db.auth.getUser();if(!user)return {error:'سجل الدخول أولًا.'};const {data:consent}=await db.from('consents').select('id').eq('user_id',user.id).eq('consent_type','health_data').eq('granted',true).order('granted_at',{ascending:false}).limit(1).maybeSingle();if(consent)await db.from('consents').update({granted:false,revoked_at:new Date().toISOString()}).eq('id',consent.id);await db.from('profiles').update({consent_health_at:null}).eq('id',user.id);await db.from('notification_preferences').update({meal_enabled:false,water_enabled:false,weighin_enabled:false}).eq('user_id',user.id);revalidatePath('/client/settings');return {success:true};}

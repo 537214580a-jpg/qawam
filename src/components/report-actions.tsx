@@ -1,0 +1,3 @@
+'use client';
+import { useState } from 'react';
+export function ReportShareButton({url}:{url:string}){const [message,setMessage]=useState<string | undefined>('');async function share(){const full=new URL(url,window.location.origin).toString();try{if(navigator.share)await navigator.share({title:'تقرير قوام الأسبوعي',url:full});else{await navigator.clipboard.writeText(full);setMessage('تم نسخ رابط التقرير.');}}catch{setMessage('تعذر مشاركة الرابط.');}}return <span className="inline-flex items-center gap-2"><button type="button" className="secondary-button" onClick={share}>مشاركة التقرير</button>{message&&<span role="status" className="text-xs text-qawam-700">{message}</span>}</span>}

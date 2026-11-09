@@ -1,0 +1,16 @@
+{
+  "name": "قوام | منصة التغذية",
+  "short_name": "قوام",
+  "description": "منصة التغذية والمتابعة الصحية العربية",
+  "lang": "ar-SA",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#F6FAF8",
+  "theme_color": "#0B2E1F",
+  "icons": [
+    { "src": "/icons/qawam.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

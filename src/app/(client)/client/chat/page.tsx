@@ -1,0 +1,4 @@
+import { redirect } from 'next/navigation';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { RealtimeChat } from '@/components/realtime-chat';
+export default async function ClientChatPage(){const db=await createSupabaseServerClient();const {data:{user}}=await db.auth.getUser();if(!user)redirect('/login');const {data:client}=await db.from('clients').select('id').eq('user_id',user.id).maybeSingle();if(!client)redirect('/client/onboarding');const {data:messages}=await db.from('messages').select('id,sender_id,body,created_at').eq('client_id',client.id).order('created_at').limit(300);return <div className="mx-auto max-w-3xl space-y-4"><header><p className="text-sm font-bold text-qawam-500">تواصل مباشر</p><h1 className="mt-1 text-3xl font-extrabold">محادثة الأخصائي</h1></header><RealtimeChat clientId={client.id} userId={user.id} initial={messages||[]}/></div>}

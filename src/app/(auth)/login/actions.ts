@@ -1,0 +1,27 @@
+'use server';
+import { z } from 'zod';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+const schema = z.object({ contact: z.string().trim().min(5).max(254), channel: z.enum(['email','sms']) });
+export async function sendOtp(formData: FormData) {
+  const parsed = schema.safeParse({ contact: formData.get('contact'), channel: formData.get('channel') });
+  if (!parsed.success) return { error: 'تحقق من رقم الجوال أو البريد الإلكتروني.' };
+  const { contact, channel } = parsed.data;
+  const supabase = await createSupabaseServerClient();
+  const { error } = channel === 'email'
+    ? await supabase.auth.signInWithOtp({ email: contact, options: { shouldCreateUser: true } })
+    : await supabase.auth.signInWithOtp({ phone: contact, options: { shouldCreateUser: true } });
+  return error ? { error: 'تعذر إرسال رمز التحقق. تأكد من إعداد مزود الرسائل أو البريد.' } : { success: 'أرسلنا لك رمز التحقق.' };
+}
+
+const verifySchema = z.object({ contact: z.string().min(5), token: z.string().length(6), channel: z.enum(['email','sms']) });
+export async function verifyOtp(formData: FormData) {
+  const parsed = verifySchema.safeParse({ contact: formData.get('contact'), token: formData.get('token'), channel: formData.get('channel') });
+  if (!parsed.success) return { error: 'أدخل رمز التحقق المكوّن من 6 أرقام.' };
+  const { contact, token, channel } = parsed.data;
+  const supabase = await createSupabaseServerClient();
+  const { error } = channel === 'email'
+    ? await supabase.auth.verifyOtp({ email: contact, token, type: 'email' })
+    : await supabase.auth.verifyOtp({ phone: contact, token, type: 'sms' });
+  return error ? { error: 'الرمز غير صحيح أو انتهت صلاحيته.' } : { success: true };
+}

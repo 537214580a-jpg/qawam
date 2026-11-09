@@ -1,0 +1,6 @@
+'use server';
+import { z } from 'zod';
+import { revalidatePath } from 'next/cache';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+const schema=z.object({mealEnabled:z.enum(['on','off']),mealTime:z.string().regex(/^([01]\d|2[0-3]):00$/),waterEnabled:z.enum(['on','off']),waterTime:z.string().regex(/^([01]\d|2[0-3]):00$/),weighinEnabled:z.enum(['on','off']),weekday:z.coerce.number().int().min(0).max(6)});
+export async function updateNotificationPreferences(formData:FormData){const p=schema.safeParse({mealEnabled:formData.get('mealEnabled')||'off',mealTime:formData.get('mealTime'),waterEnabled:formData.get('waterEnabled')||'off',waterTime:formData.get('waterTime'),weighinEnabled:formData.get('weighinEnabled')||'off',weekday:formData.get('weekday')});if(!p.success)return {error:'تحقق من أوقات التذكير.'};const db=await createSupabaseServerClient();const {data:{user}}=await db.auth.getUser();if(!user)return {error:'سجل الدخول أولًا.'};const d=p.data;const {error}=await db.from('notification_preferences').upsert({user_id:user.id,meal_enabled:d.mealEnabled==='on',meal_time:d.mealTime,water_enabled:d.waterEnabled==='on',water_time:d.waterTime,weighin_enabled:d.weighinEnabled==='on',weighin_weekday:d.weekday});if(error)return {error:'تعذر حفظ إعدادات التذكير.'};revalidatePath('/client/notifications');return {success:true};}

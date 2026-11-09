@@ -16,7 +16,8 @@ export async function getClinicContext() {
     .limit(1)
     .maybeSingle();
 
-  const clinicRow = membership?.clinics as {
+  const linkedClinic = membership?.clinics;
+  const clinicRow = (Array.isArray(linkedClinic) ? linkedClinic[0] : linkedClinic) as {
     id: string;
     name: string;
     slug: string;

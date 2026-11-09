@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getProfile } from '@/lib/auth';
 
 async function signOut() {
   'use server';
@@ -12,6 +13,8 @@ export default async function SetupStatusPage() {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
+  const profile = await getProfile();
+  if (profile) redirect(profile.role === 'client' ? '/client' : profile.role === 'super_admin' ? '/admin' : '/clinic');
 
   return (
     <main dir="rtl" className="grid min-h-screen place-items-center bg-qawam-50 px-4 py-10">

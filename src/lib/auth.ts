@@ -49,8 +49,19 @@ export async function requireProfile(roles?: Role[]) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect('/login');
-  const profile = await getProfile();
+  let profile = await getProfile();
   if (!profile) redirect('/setup');
+
+  // A clinic administrator can also use the client portal when the same account is linked to a client record.
+  if (roles?.includes('client') && !roles.includes(profile.role)) {
+    const { data: clientLink } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    if (clientLink) profile = { ...profile, role: 'client' };
+  }
+
   if (roles && !roles.includes(profile.role)) redirect(profile.role === 'client' ? '/client' : '/setup');
   return profile;
 }

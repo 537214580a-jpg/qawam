@@ -1,5 +1,5 @@
 'use client';
-import { useState,useTransition } from 'react';
+import { useState,useTransition, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { logFreeTextMeal } from '@/app/(client)/client/actions';
 
@@ -9,7 +9,7 @@ export function FreeTextMeal(){
  const [text,setText]=useState('');
  const [mealType,setMealType]=useState('وجبة رئيسية');
  const [message,setMessage]=useState('');
- function submit(event:React.FormEvent<HTMLFormElement>){
+ function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();
   const formData=new FormData();
   formData.set('text',text);

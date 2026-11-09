@@ -17,7 +17,7 @@ export function FreeTextMeal(){
   setMessage('');
   start(async()=>{
    const result=await logFreeTextMeal(formData);
-   if('error'in result&&result.error){setMessage(result.error);return;}
+   if(!result.items||!result.totals){setMessage('error'in result&&result.error?result.error:'تعذر تسجيل الوجبة. حاول مرة ثانية.');return;}
    const detected=result.items.map(item=>`${item.name} ${item.grams}غ`).join('، ');
    const totals=result.totals;
    setMessage(`سجلنا: ${detected} — ${Math.round(totals.calories)} سعرة، بروتين ${Math.round(totals.protein)}غ، كارب ${Math.round(totals.carbs)}غ، دهون ${Math.round(totals.fat)}غ.`);

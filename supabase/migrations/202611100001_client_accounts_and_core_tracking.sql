@@ -273,3 +273,139 @@ revoke execute on function public.seed_clinic_defaults() from public, anon, auth
 revoke execute on function public.create_clinic(text,text) from public, anon;
 revoke execute on function public.has_clinic_permission(uuid,text) from public, anon;
 revoke execute on function public.is_clinic_member(uuid) from public, anon;
+
+
+alter table public.clinics add column if not exists logo_path text;
+alter table public.clinics add column if not exists brand_primary text not null default '#0B2E1F';
+alter table public.clinics add column if not exists brand_accent text not null default '#1FA971';
+
+alter table public.measurements add column if not exists measured_on date not null default current_date;
+alter table public.measurements add column if not exists waist_cm numeric(5,1);
+alter table public.measurements add column if not exists hip_cm numeric(5,1);
+alter table public.measurements add column if not exists chest_cm numeric(5,1);
+alter table public.measurements add column if not exists arm_cm numeric(5,1);
+alter table public.measurements add column if not exists thigh_cm numeric(5,1);
+alter table public.measurements add column if not exists photo_paths text[] not null default '{}';
+create unique index if not exists qawam_measurements_client_day_idx on public.measurements(client_id,measured_on);
+
+create table if not exists public.usual_meals (
+ id uuid primary key default gen_random_uuid(),
+ user_id uuid not null references auth.users(id) on delete cascade,
+ name text not null,
+ items jsonb not null default '[]',
+ meal_type text not null default 'وجبة',
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now()
+);
+create table if not exists public.plan_templates (
+ id uuid primary key default gen_random_uuid(),
+ clinic_id uuid references public.clinics(id) on delete cascade,
+ created_by uuid references auth.users(id) on delete set null,
+ name text not null,
+ goal text not null default 'cut',
+ calories integer not null,
+ protein_g integer not null,
+ carbs_g integer not null,
+ fat_g integer not null,
+ meal_suggestions jsonb not null default '[]',
+ is_platform_template boolean not null default false,
+ created_at timestamptz not null default now()
+);
+create table if not exists public.plans (
+ id uuid primary key default gen_random_uuid(),
+ name text unique not null,
+ client_limit integer,
+ price_sar numeric(10,2) not null default 0,
+ interval text not null default 'month' check(interval in ('month','year')),
+ features jsonb not null default '[]',
+ audience text not null default 'clinic' check(audience in ('clinic','client')),
+ is_active boolean not null default true,
+ created_at timestamptz not null default now()
+);
+create table if not exists public.subscriptions (
+ id uuid primary key default gen_random_uuid(),
+ user_id uuid references auth.users(id) on delete cascade,
+ clinic_id uuid references public.clinics(id) on delete cascade,
+ plan_id uuid not null references public.plans(id),
+ status text not null default 'trialing',
+ starts_at timestamptz not null default now(),
+ ends_at timestamptz,
+ renews_at timestamptz,
+ moyasar_id text,
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now(),
+ check ((user_id is not null) <> (clinic_id is not null))
+);
+create table if not exists public.payments (
+ id uuid primary key default gen_random_uuid(),
+ subscription_id uuid references public.subscriptions(id) on delete set null,
+ user_id uuid references auth.users(id) on delete set null,
+ clinic_id uuid references public.clinics(id) on delete set null,
+ amount_sar numeric(10,2) not null,
+ currency text not null default 'SAR',
+ status text not null default 'initiated',
+ moyasar_id text unique,
+ invoice_url text,
+ raw_event jsonb,
+ paid_at timestamptz,
+ created_at timestamptz not null default now()
+);
+create table if not exists public.push_subscriptions (
+ id uuid primary key default gen_random_uuid(),
+ user_id uuid not null references auth.users(id) on delete cascade,
+ endpoint text not null unique,
+ p256dh text not null,
+ auth text not null,
+ created_at timestamptz not null default now()
+);
+create table if not exists public.audit_log (
+ id bigint generated always as identity primary key,
+ actor_id uuid references auth.users(id) on delete set null,
+ clinic_id uuid references public.clinics(id) on delete set null,
+ action text not null,
+ entity text not null,
+ entity_id text,
+ metadata jsonb not null default '{}',
+ created_at timestamptz not null default now()
+);
+
+alter table public.notifications add column if not exists user_id uuid references auth.users(id) on delete cascade;
+alter table public.notifications add column if not exists kind text;
+alter table public.notifications add column if not exists payload jsonb not null default '{}';
+create index if not exists qawam_notifications_user_time_idx on public.notifications(user_id,created_at desc);
+
+do $$
+declare t text;
+begin
+ foreach t in array array['usual_meals','plan_templates','plans','subscriptions','payments','push_subscriptions','audit_log'] loop
+  execute format('alter table public.%I enable row level security',t);
+  execute format('grant select,insert,update,delete on public.%I to authenticated',t);
+ end loop;
+end;
+$$;
+
+drop policy if exists qawam_usual_meals_access on public.usual_meals;
+create policy qawam_usual_meals_access on public.usual_meals for all to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
+drop policy if exists qawam_templates_access on public.plan_templates;
+create policy qawam_templates_access on public.plan_templates for select to authenticated using(is_platform_template or created_by=(select auth.uid()) or (clinic_id is not null and public.is_clinic_member(clinic_id)));
+drop policy if exists qawam_templates_manage on public.plan_templates;
+create policy qawam_templates_manage on public.plan_templates for all to authenticated using(created_by=(select auth.uid()) or (clinic_id is not null and public.has_clinic_permission(clinic_id,'plans.manage'))) with check(created_by=(select auth.uid()) or (clinic_id is not null and public.has_clinic_permission(clinic_id,'plans.manage')));
+drop policy if exists qawam_plans_read on public.plans;
+create policy qawam_plans_read on public.plans for select to authenticated using(is_active);
+drop policy if exists qawam_subscriptions_access on public.subscriptions;
+create policy qawam_subscriptions_access on public.subscriptions for select to authenticated using(user_id=(select auth.uid()) or (clinic_id is not null and public.is_clinic_member(clinic_id)));
+drop policy if exists qawam_payments_access on public.payments;
+create policy qawam_payments_access on public.payments for select to authenticated using(user_id=(select auth.uid()) or (clinic_id is not null and public.is_clinic_member(clinic_id)));
+drop policy if exists qawam_push_access on public.push_subscriptions;
+create policy qawam_push_access on public.push_subscriptions for all to authenticated using(user_id=(select auth.uid())) with check(user_id=(select auth.uid()));
+drop policy if exists qawam_audit_read on public.audit_log;
+create policy qawam_audit_read on public.audit_log for select to authenticated using(clinic_id is not null and public.has_clinic_permission(clinic_id,'audit.read'));
+drop policy if exists qawam_notifications_self on public.notifications;
+create policy qawam_notifications_self on public.notifications for select to authenticated using(user_id=(select auth.uid()) or recipient_user_id=(select auth.uid()));
+drop policy if exists qawam_notifications_update_self on public.notifications;
+create policy qawam_notifications_update_self on public.notifications for update to authenticated using(user_id=(select auth.uid()) or recipient_user_id=(select auth.uid())) with check(user_id=(select auth.uid()) or recipient_user_id=(select auth.uid()));
+
+create index if not exists qawam_meal_items_log_idx on public.meal_items(meal_log_id);
+create index if not exists qawam_checkins_client_week_idx on public.checkins(client_id,week_start desc);
+create index if not exists qawam_usual_meals_user_idx on public.usual_meals(user_id);
+create index if not exists qawam_push_user_idx on public.push_subscriptions(user_id);

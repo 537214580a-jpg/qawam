@@ -1,3 +1,51 @@
-import Link from 'next/link';
 import { getClinicContext } from '@/lib/clinic';
-export default async function ClientsPage({searchParams}:{searchParams:{q?:string;status?:string}}){const {db,clinic}=await getClinicContext();if(!clinic)return <section className="panel">لا توجد عيادة مرتبطة بهذا الحساب.</section>;let query=db.from('clients').select('id,status,goal,target_calories,last_activity_at,profiles(full_name,phone)').eq('clinic_id',clinic.id).order('created_at',{ascending:false});if(searchParams.status)query=query.eq('status',searchParams.status);const {data}=await query;const q=(searchParams.q||'').toLocaleLowerCase('ar');const clients=(data||[]).filter((c:any)=>!q||`${c.profiles?.full_name||''} ${c.profiles?.phone||''}`.toLocaleLowerCase('ar').includes(q));return <div className="space-y-5"><header><p className="text-sm font-bold text-qawam-500">إدارة المتابعة</p><h1 className="mt-1 text-3xl font-extrabold">العملاء</h1></header><form className="panel flex flex-wrap gap-3"><input name="q" defaultValue={searchParams.q} className="field min-w-56 flex-1" placeholder="ابحث بالاسم أو الجوال"/><select name="status" defaultValue={searchParams.status||''} className="field w-auto"><option value="">كل الحالات</option><option value="on_track">على المسار</option><option value="lagging">متأخر</option><option value="attention">يحتاج انتباه</option></select><button className="primary-button">بحث</button></form><div className="panel overflow-x-auto"><table className="w-full min-w-[640px] text-right text-sm"><thead className="text-slate-500"><tr><th className="p-3">الاسم</th><th className="p-3">الهدف</th><th className="p-3">السعرات</th><th className="p-3">الحالة</th><th className="p-3">آخر نشاط</th><th/></tr></thead><tbody>{clients.map((c:any)=><tr key={c.id} className="border-t"><td className="p-3 font-bold">{c.profiles?.full_name||'عميل جديد'}</td><td className="p-3">{c.goal==='cut'?'خفض وزن':c.goal==='bulk'?'زيادة وزن':'محافظة'}</td><td className="p-3">{c.target_calories||'—'}</td><td className="p-3">{c.status==='on_track'?'على المسار':c.status==='lagging'?'متأخر':'يحتاج انتباه'}</td><td className="p-3">{c.last_activity_at?new Date(c.last_activity_at).toLocaleDateString('ar-SA'):'—'}</td><td className="p-3"><Link className="font-bold text-qawam-700" href={`/clinic/clients/${c.id}`}>الملف</Link></td></tr>)}</tbody></table>{!clients.length&&<p className="py-8 text-center text-slate-500">لا توجد نتائج. عدّل البحث أو أضف عميلًا جديدًا.</p>}</div></div>}
+
+export default async function ClientsPage({ searchParams }: { searchParams: { q?: string } }) {
+  const { db, clinic } = await getClinicContext();
+  if (!clinic) return <section className="panel">لا توجد عيادة مرتبطة بهذا الحساب.</section>;
+
+  const { data } = await db
+    .from('clients')
+    .select('id,client_code,full_name,phone,email,status,created_at')
+    .eq('clinic_id', clinic.id)
+    .order('created_at', { ascending: false });
+
+  const search = (searchParams.q || '').trim().toLocaleLowerCase('ar');
+  const clients = (data || []).filter((client) =>
+    !search || `${client.full_name} ${client.phone || ''} ${client.email || ''} ${client.client_code}`
+      .toLocaleLowerCase('ar')
+      .includes(search)
+  );
+
+  return (
+    <div className="space-y-5">
+      <header>
+        <p className="text-sm font-bold text-qawam-500">إدارة المتابعة</p>
+        <h1 className="mt-1 text-3xl font-extrabold">العملاء</h1>
+      </header>
+      <form className="panel flex flex-wrap gap-3">
+        <input name="q" defaultValue={searchParams.q} className="field min-w-56 flex-1" placeholder="ابحث بالاسم أو الجوال أو البريد" />
+        <button className="primary-button">بحث</button>
+      </form>
+      <div className="panel overflow-x-auto">
+        <table className="w-full min-w-[640px] text-right text-sm">
+          <thead className="text-slate-500">
+            <tr><th className="p-3">الاسم</th><th className="p-3">رقم العميل</th><th className="p-3">الجوال</th><th className="p-3">البريد</th><th className="p-3">الحالة</th></tr>
+          </thead>
+          <tbody>
+            {clients.map((client) => (
+              <tr key={client.id} className="border-t">
+                <td className="p-3 font-bold">{client.full_name}</td>
+                <td className="p-3">{client.client_code}</td>
+                <td className="p-3" dir="ltr">{client.phone || '—'}</td>
+                <td className="p-3" dir="ltr">{client.email || '—'}</td>
+                <td className="p-3">{client.status === 'active' ? 'نشط' : client.status === 'archived' ? 'مؤرشف' : String(client.status)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!clients.length && <p className="py-8 text-center text-slate-500">لا يوجد عملاء مطابقون للبحث.</p>}
+      </div>
+    </div>
+  );
+}

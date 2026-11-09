@@ -12,8 +12,9 @@ export async function saveOnboarding(formData:FormData){
  const targets=calculateTargets({age:d.age,sex:d.sex,heightCm:d.height,weightKg:d.weight,activity:d.activity,goal:d.goal});
  const birthDate=new Date(); birthDate.setFullYear(birthDate.getFullYear()-d.age);
  const admin=createSupabaseAdminClient();const {data:existing}=await admin.from('clients').select('id,clinic_id').eq('user_id',user.id).maybeSingle();let clinicId=existing?.clinic_id||null;if(!existing&&d.clinicSlug){const {data:clinic}=await admin.from('clinics').select('id').eq('slug',d.clinicSlug).maybeSingle();if(!clinic)return {error:'رمز العيادة غير موجود. اترك الحقل فارغًا أو تحقق من الرمز.'};clinicId=clinic.id;}
- const {error}=await admin.from('clients').upsert({user_id:user.id,clinic_id:clinicId,birth_date:birthDate.toISOString().slice(0,10),sex:d.sex,height_cm:d.height,starting_weight_kg:d.weight,activity_level:d.activity,goal:d.goal,bmr:targets.bmr,tdee:targets.tdee,target_calories:targets.calories,target_protein:targets.protein,target_carbs:targets.carbs,target_fat:targets.fat},{onConflict:'user_id'});
- if(error)return {error:'تعذر حفظ ملفك. حاول مرة أخرى.'};
+ const databaseSex=d.sex==='other'?'unspecified':d.sex;
+ const {error}=await admin.from('clients').upsert({user_id:user.id,clinic_id:clinicId,birth_date:birthDate.toISOString().slice(0,10),sex:databaseSex,height_cm:d.height,starting_weight_kg:d.weight,activity_level:d.activity,goal:d.goal,bmr:targets.bmr,tdee:targets.tdee,target_calories:targets.calories,target_protein:targets.protein,target_carbs:targets.carbs,target_fat:targets.fat},{onConflict:'user_id'});
+ if(error){console.error('QAWAM onboarding save failed',error.code,error.message);return {error:'تعذر حفظ البيانات. راجع القيم وحاول مرة ثانية.'};}
  await supabase.from('consents').upsert({user_id:user.id,consent_type:'health_data',version:'2026-11-01',granted:true},{onConflict:'user_id,consent_type,version'});
  await supabase.from('profiles').update({consent_health_at:new Date().toISOString()}).eq('id',user.id);
  await supabase.from('weight_logs').upsert({client_id:(await supabase.from('clients').select('id').eq('user_id',user.id).single()).data?.id,weight_kg:d.weight,logged_on:new Date().toISOString().slice(0,10)},{onConflict:'client_id,logged_on'});

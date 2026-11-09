@@ -1,0 +1,10 @@
+{
+  "name": "QAWAM - قوام للتغذية",
+  "short_name": "QAWAM",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0B2E1F",
+  "theme_color": "#0B2E1F"
+}

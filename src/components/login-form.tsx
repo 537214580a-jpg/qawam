@@ -22,7 +22,7 @@ export function LoginForm() {
     <div className="mb-5 grid grid-cols-2 rounded-xl bg-slate-100 p-1"><button type="button" onClick={()=>setChannel('sms')} className={`rounded-lg p-2 text-sm ${channel==='sms'?'bg-white shadow':''}`}>رقم الجوال</button><button type="button" onClick={()=>setChannel('email')} className={`rounded-lg p-2 text-sm ${channel==='email'?'bg-white shadow':''}`}>البريد الإلكتروني</button></div>
     <label className="field-label">{channel==='sms'?'رقم الجوال مع مفتاح الدولة':'البريد الإلكتروني'}</label>
     <input className="field" dir="ltr" type={channel==='sms'?'tel':'email'} value={contact} onChange={e=>setContact(e.target.value)} required placeholder={channel==='sms'?'+9665xxxxxxxx':'name@example.com'} />
-    {sent && <><label className="field-label mt-4">رمز التحقق</label><input name="token" className="field text-center tracking-[.4em]" inputMode="numeric" pattern="[0-9]{6}" maxLength={6} required placeholder="••••••" /></>}
+    {sent && <><label className="field-label mt-4">رمز التحقق</label><input name="token" className="field text-center tracking-[.4em]" inputMode="numeric" pattern="([0-9]{6}|[0-9]{8})" minLength={6} maxLength={8} required placeholder="••••••••" /></>}
     <input type="hidden" name="contact" value={contact}/><input type="hidden" name="channel" value={channel}/>
     <button className="primary-button mt-5 w-full" disabled={pending}>{pending?'جارٍ الإرسال…':sent?'تأكيد الرمز':'إرسال رمز الدخول'}</button>
     {message && <p role="status" className="mt-4 text-center text-sm text-qawam-700">{message}</p>}

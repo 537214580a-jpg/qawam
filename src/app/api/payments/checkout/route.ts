@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-const schema=z.object({planId:z.string().uuid()});
-export async function POST(request:Request){const parsed=schema.safeParse(await request.json().catch(()=>null));if(!parsed.success)return NextResponse.json({error:'اختر خطة صالحة.'},{status:400});const auth=await createSupabaseServerClient();const {data:{user}}=await auth.auth.getUser();if(!user)return NextResponse.json({error:'سجل الدخول أولًا.'},{status:401});const secret=process.env.MOYASAR_SECRET_KEY;const base=process.env.NEXT_PUBLIC_APP_URL;if(!secret||!base)return NextResponse.json({error:'إعداد الدفع غير مكتمل.'},{status:503});const admin=createSupabaseAdminClient();const {data:plan}=await admin.from('plans').select('*').eq('id',parsed.data.planId).eq('audience','client').eq('is_active',true).single();if(!plan)return NextResponse.json({error:'الخطة غير متاحة.'},{status:404});const {data:subscription,error:subError}=await admin.from('subscriptions').insert({user_id:user.id,plan_id:plan.id,status:'trialing',ends_at:null}).select('id').single();if(subError||!subscription)return NextResponse.json({error:'تعذر إنشاء الاشتراك.'},{status:500});const response=await fetch('https://api.moyasar.com/v1/invoices',{method:'POST',headers:{authorization:`Basic ${Buffer.from(`${secret}:`).toString('base64')}`,'content-type':'application/json'},body:JSON.stringify({amount:Math.round(Number(plan.price_sar)*100),currency:'SAR',description:`اشتراك قوام - ${plan.name}`,success_url:`${base}/client/subscription?payment=success`,back_url:`${base}/client/subscription?payment=cancelled`,callback_url:`${base}/api/webhooks/moyasar`,metadata:{qawam_user_id:user.id,qawam_subscription_id:subscription.id}}),cache:'no-store'});const invoice=await response.json().catch(()=>null);if(!response.ok||!invoice?.id||!invoice?.url){await admin.from('subscriptions').update({status:'past_due'}).eq('id',subscription.id);return NextResponse.json({error:'تعذر إنشاء فاتورة الدفع.'},{status:502});}await admin.from('payments').insert({subscription_id:subscription.id,user_id:user.id,amount_sar:plan.price_sar,currency:'SAR',status:'initiated',moyasar_id:invoice.id,invoice_url:invoice.url});return NextResponse.json({url:invoice.url});}
+
+export async function POST(){
+ return NextResponse.json(
+  {error:'الدفع الإلكتروني غير متاح حاليًا. أرسل طلب الاشتراك عبر واتساب.'},
+  {status:410}
+ );
+}

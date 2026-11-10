@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { logFreeTextMeal } from '@/app/(client)/client/actions';
 
 type MealPreview = {
-  items: Array<{ name: string; grams: number }>;
+  items: Array<{ name: string; grams: number; calories: number; protein: number; carbs: number; fat: number }>;
   totals: { calories: number; protein: number; carbs: number; fat: number };
 };
 
@@ -108,9 +108,17 @@ export function FreeTextMeal({ locale = 'ar' }: { locale?: 'ar' | 'en' }) {
           </p>
           <ul className="mt-3 space-y-2">
             {preview.items.map((item, index) => (
-              <li key={item.name + '-' + index} className="flex justify-between gap-3 text-sm">
-                <span>{item.name}</span>
-                <span className="font-bold">{item.grams} {en ? 'g' : 'غ'}</span>
+              <li key={item.name + '-' + index} className="flex flex-col gap-1 border-b border-qawam-100 pb-2 text-sm last:border-0">
+                <div className="flex justify-between gap-3">
+                  <span>{item.name}</span>
+                  <span className="font-bold">{item.grams} {en ? 'g' : 'غ'}</span>
+                </div>
+                <span className="text-xs text-slate-600">
+                  {Math.round(item.calories)} {en ? 'kcal' : 'سعرة'}
+                  {' · '}{en ? 'P' : 'ب'} {Math.round(item.protein)}{en ? 'g' : 'غ'}
+                  {' · '}{en ? 'C' : 'ك'} {Math.round(item.carbs)}{en ? 'g' : 'غ'}
+                  {' · '}{en ? 'F' : 'د'} {Math.round(item.fat)}{en ? 'g' : 'غ'}
+                </span>
               </li>
             ))}
           </ul>

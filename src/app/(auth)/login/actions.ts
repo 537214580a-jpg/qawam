@@ -10,12 +10,12 @@ const schema = z.object({
 });
 
 function normalizeSaudiPhone(value: string) {
-  const compact = value.trim().replace(/[\s()-]/g, '');
-  if (/^\+\d{8,15}$/.test(compact)) return compact;
-  if (/^00966\d{9}$/.test(compact)) return '+' + compact.slice(2);
-  if (/^966\d{9}$/.test(compact)) return '+' + compact;
-  if (/^05\d{8}$/.test(compact)) return '+966' + compact.slice(1);
-  if (/^5\d{8}$/.test(compact)) return '+966' + compact;
+  const compact = value.trim().replace(/[\\s()-]/g, '');
+  if (/^\\+\\d{8,15}$/.test(compact)) return compact;
+  if (/^00966\\d{9}$/.test(compact)) return '+' + compact.slice(2);
+  if (/^966\\d{9}$/.test(compact)) return '+' + compact;
+  if (/^05\\d{8}$/.test(compact)) return '+966' + compact.slice(1);
+  if (/^5\\d{8}$/.test(compact)) return '+966' + compact;
   return null;
 }
 
@@ -55,7 +55,7 @@ export async function sendOtp(formData: FormData) {
 
 const verifySchema = z.object({
   contact: z.string().trim().min(5).max(254),
-  token: z.string().regex(/^(?:\d{6}|\d{8})$/),
+  token: z.string().regex(/^(?:\\d{6}|\\d{8})$/),
   channel: z.enum(['email', 'sms'])
 });
 
@@ -68,7 +68,7 @@ export async function verifyOtp(formData: FormData) {
   if (!parsed.success) return { error: 'أدخل رمز التحقق المكوّن من 6 أو 8 أرقام.' };
 
   const supabase = await createSupabaseServerClient();
-  let error;
+  let error: { message: string } | null = null;
   if (parsed.data.channel === 'email') {
     const { error: verifyError } = await supabase.auth.verifyOtp({
       email: parsed.data.contact.toLowerCase(),

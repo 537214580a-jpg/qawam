@@ -130,7 +130,7 @@ export async function logFreeTextMeal(formData:FormData){
   }
   const nutritionRows=items.map(({food,grams})=>{const factor=grams/100;return {food_id:food.id,name:food.name_ar,grams,calories:Number(food.calories)*factor,protein_g:Number(food.protein_g)*factor,carbs_g:Number(food.carbs_g)*factor,fat_g:Number(food.fat_g)*factor};});
   const totals=nutritionRows.reduce((total,item)=>({calories:total.calories+item.calories,protein:total.protein+item.protein_g,carbs:total.carbs+item.carbs_g,fat:total.fat+item.fat_g}),{calories:0,protein:0,carbs:0,fat:0});
-  const preview={items:items.map(({food,grams})=>({name:food.name_ar,grams})),totals};
+  const preview={items:nutritionRows.map(item=>({name:item.name,grams:item.grams,calories:item.calories,protein:item.protein_g,carbs:item.carbs_g,fat:item.fat_g})),totals};
   if(!confirmed)return {preview};
   const {data:log,error:logError}=await db.from('meal_logs').insert({client_id:clientId,meal_type:parsed.data.mealType,source:'text'}).select('id').single();
   if(logError||!log){console.error('QAWAM free-text meal log failed',logError?.code,logError?.message);return {error:'تعذر حفظ الوجبة. حاول مرة ثانية.'};}

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export type Role = 'client' | 'specialist' | 'clinic_admin' | 'super_admin';
-export type Profile = { id: string; full_name: string; role: Role; avatar_path: string | null };
+export type Profile = { id: string; full_name: string; role: Role; avatar_path: string | null; locale: 'ar'|'en' };
 
 function roleFromKey(value: unknown): Role | null {
   if (value === 'client' || value === 'specialist' || value === 'clinic_admin' || value === 'super_admin') return value;
@@ -28,21 +28,21 @@ export async function getProfile() {
     .eq('status', 'active')
     .limit(1)
     .maybeSingle();
-  const linkedRole = membership?.clinic_roles;
+  const { data: localeProfile } = await supabase.from('profiles').select('locale').eq('id', user.id).maybeSingle();\n  const locale: 'ar'|'en' = localeProfile?.locale === 'en' ? 'en' : 'ar';\n  const linkedRole = membership?.clinic_roles;
   const clinicRole = (Array.isArray(linkedRole) ? linkedRole[0] : linkedRole) as { role_key?: string } | null;
   const role = roleFromKey(clinicRole?.role_key);
 
   if (!role) {
     const { data: legacyProfile } = await supabase
       .from('profiles')
-      .select('id,full_name,role,avatar_path')
+      .select('id,full_name,role,avatar_path,locale')
       .eq('id', user.id)
       .maybeSingle();
-    if (legacyProfile) return legacyProfile as Profile;
+    if (legacyProfile) return { ...legacyProfile, locale: legacyProfile.locale === 'en' ? 'en' : 'ar' } as Profile;
   }
 
   if (!role) return null;
-  return { id: user.id, full_name: userProfile?.full_name || user.email || '', role, avatar_path: null } as Profile;
+  return { id: user.id, full_name: userProfile?.full_name || user.email || '', role, avatar_path: null, locale } as Profile;
 }
 
 export async function requireProfile(roles?: Role[]) {

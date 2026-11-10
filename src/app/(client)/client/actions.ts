@@ -88,7 +88,7 @@ function findUnrecognizedMealWords(text:string,matches:MealTextMatch[]){
  const chars=Array.from(text);
  for(const match of matches)for(let index=match.start;index<match.end;index++)chars[index]=' ';
  const stopWords=new Set([
-  'اكل','اكلت','تناولت','شربت','الوجبه','وجبه','اليوم','مع','و','من','في','على','الى','ثم','كان','كانت',
+  'اكل','اكلت','تناولت','شربت','الوجبه','وجبه','اليوم','مع','و','من','في','على','الى','ثم','كان','كانت','هذا','هذي','الفطور','فطور','افطار','الغداء','غداء','الغدا','العشاء','عشاء','سناك','خفيفه','رئيسيه','سجل','سجلي','اضف','حط',
   'i','ate','had','drank','with','and','a','an','the','meal','today',
   'g','gram','grams','غ','غرام','جرام','جم'
  ]);

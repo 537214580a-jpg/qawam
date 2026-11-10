@@ -49,7 +49,7 @@ export function FoodLogger({ foods, userId, locale = 'ar' }: { foods: Food[]; us
     formData.set('photoPath', photoPath);
     start(async () => {
       const result = await addMeal(formData);
-      if ('error' in result) setStatus(result.error);
+      if ('error' in result) setStatus(result.error || (en ? 'Could not save the meal.' : 'تعذر حفظ الوجبة.'));
       else { setStatus(en ? 'Meal logged.' : 'تم تسجيل الوجبة.'); setSelected(null); setGrams(100); setPhotoPath(''); router.refresh(); }
     });
   }

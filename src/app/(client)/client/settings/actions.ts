@@ -11,9 +11,10 @@ export async function setPreferredLocale(formData:FormData){
  if(!parsed.success)return {error:'اللغة غير مدعومة.'};
  const db=await createSupabaseServerClient();
  const {data:{user}}=await db.auth.getUser();
- if(!user)return {error:'سجّل الدخول أولًا.'};
- const {error}=await db.rpc('set_my_locale',{p_locale:parsed.data});
- if(error)return {error:'تعذر حفظ اللغة لحسابك.'};
+ if(user){
+  const {error}=await db.rpc('set_my_locale',{p_locale:parsed.data});
+  if(error)return {error:'تعذر حفظ اللغة لحسابك.'};
+ }
  cookies().set('qawam_locale',parsed.data,{httpOnly:true,secure:process.env.NODE_ENV==='production',sameSite:'lax',path:'/',maxAge:60*60*24*365});
  revalidatePath('/', 'layout');
  return {success:true,locale:parsed.data};

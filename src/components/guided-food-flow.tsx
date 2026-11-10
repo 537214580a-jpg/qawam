@@ -30,7 +30,7 @@ export function GuidedFoodFlow({ foods, locale = 'ar' }: { foods: Food[]; locale
     formData.set('foodId', food.id);
     start(async () => {
       const result = await addMeal(formData);
-      if ('error' in result) setMessage(result.error);
+      if ('error' in result) setMessage(result.error || (en ? 'Could not save the meal.' : 'تعذر حفظ الوجبة.'));
       else { setMessage(en ? `Logged ${foodName(food)} at ${grams} g.` : `تم تسجيل ${foodName(food)} بكمية ${grams} غرام.`); setStep(0); setFood(null); }
     });
   }

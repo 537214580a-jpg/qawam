@@ -1,0 +1,1 @@
+grant update (journey_start_date) on public.clients to authenticated;

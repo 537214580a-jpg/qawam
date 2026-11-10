@@ -28,7 +28,9 @@ export async function getProfile() {
     .eq('status', 'active')
     .limit(1)
     .maybeSingle();
-  const { data: localeProfile } = await supabase.from('profiles').select('locale').eq('id', user.id).maybeSingle();\n  const locale: 'ar'|'en' = localeProfile?.locale === 'en' ? 'en' : 'ar';\n  const linkedRole = membership?.clinic_roles;
+  const { data: localeProfile } = await supabase.from('profiles').select('locale').eq('id', user.id).maybeSingle();
+  const locale: 'ar'|'en' = localeProfile?.locale === 'en' ? 'en' : 'ar';
+  const linkedRole = membership?.clinic_roles;
   const clinicRole = (Array.isArray(linkedRole) ? linkedRole[0] : linkedRole) as { role_key?: string } | null;
   const role = roleFromKey(clinicRole?.role_key);
 

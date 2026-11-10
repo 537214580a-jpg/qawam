@@ -68,18 +68,10 @@ export function LoginForm({
   return (
     <form onSubmit={submit} className="rounded-3xl bg-white p-6 shadow-soft sm:p-8">
       <div className="mb-5 grid grid-cols-2 rounded-xl bg-slate-100 p-1">
-        <button
-          type="button"
-          onClick={() => chooseChannel('sms')}
-          className={`rounded-lg p-2 text-sm ${channel === 'sms' ? 'bg-white shadow' : ''}`}
-        >
+        <button type="button" onClick={() => chooseChannel('sms')} className={`rounded-lg p-2 text-sm ${channel === 'sms' ? 'bg-white shadow' : ''}`}>
           {english ? 'Phone' : 'رقم الجوال'}
         </button>
-        <button
-          type="button"
-          onClick={() => chooseChannel('email')}
-          className={`rounded-lg p-2 text-sm ${channel === 'email' ? 'bg-white shadow' : ''}`}
-        >
+        <button type="button" onClick={() => chooseChannel('email')} className={`rounded-lg p-2 text-sm ${channel === 'email' ? 'bg-white shadow' : ''}`}>
           {english ? 'Email' : 'البريد الإلكتروني'}
         </button>
       </div>
@@ -127,7 +119,7 @@ export function LoginForm({
         </p>
       )}
 
-      <button className="primary-button mt-5 w-full" disabled={pending || sent}>
+      <button className="primary-button mt-5 w-full" disabled={pending}>
         {pending
           ? (english ? 'Sending…' : 'جارٍ الإرسال…')
           : sent

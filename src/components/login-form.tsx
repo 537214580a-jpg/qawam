@@ -97,7 +97,7 @@ export function LoginForm({
         onChange={event => setContact(event.target.value)}
         required
         placeholder={channel === 'sms' ? '+9665xxxxxxxx or 05xxxxxxxx' : 'name@example.com'}
-        disabled={pending || sent}
+        disabled={pending}
       />
 
       {sent && channel === 'sms' && (

@@ -92,8 +92,8 @@ function findUnrecognizedMealWords(text:string,matches:MealTextMatch[]){
   'i','ate','had','drank','with','and','a','an','the','meal','today',
   'g','gram','grams','غ','غرام','جرام','جم'
  ]);
- return Array.from(new Set((chars.join('').match(/[\\p{L}\\p{N}]+/gu)||[])
-  .filter(word=>!/^\\d+(?:[.,]\\d+)?$/.test(word)&&!stopWords.has(word))));
+ return Array.from(new Set((chars.join('').match(/[\p{L}\p{N}]+/gu)||[])
+  .filter(word=>!/^\d+(?:[.,]\d+)?$/.test(word)&&!stopWords.has(word))));
 }
 
 const freeTextMealSchema=z.object({text:z.string().trim().min(3).max(1000),mealType:z.string().trim().min(1).max(40)});

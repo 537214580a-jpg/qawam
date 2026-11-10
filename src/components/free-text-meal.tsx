@@ -71,6 +71,7 @@ export function FreeTextMeal({ locale = 'ar' }: { locale?: 'ar' | 'en' }) {
           className="field min-h-24 resize-y"
           value={text}
           onChange={event => setText(event.target.value)}
+          disabled={pending || !!preview}
           maxLength={1000}
           required
           placeholder={en ? 'Example: cooked chicken 150 g, rice 150 g' : 'مثال: دجاج مطبوخ 150، أرز 150'}
@@ -80,6 +81,7 @@ export function FreeTextMeal({ locale = 'ar' }: { locale?: 'ar' | 'en' }) {
             className="field sm:max-w-56"
             value={mealType}
             onChange={event => setMealType(event.target.value)}
+            disabled={pending || !!preview}
             aria-label={en ? 'Meal type' : 'نوع الوجبة'}
           >
             <option value="إفطار">{en ? 'Breakfast' : 'إفطار'}</option>

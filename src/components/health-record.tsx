@@ -21,7 +21,7 @@ const labSchema = z.object({
 const readingSchema = z.object({
   reading_type: z.enum(['glucose','blood_pressure','other']),
   value_primary: z.coerce.number().min(0).max(100000),
-  value_secondary: z.union([z.coerce.number().min(0).max(100000), z.literal('')]),
+  value_secondary: z.union([z.literal(''), z.coerce.number().min(0).max(100000)]),
   unit: z.string().trim().min(1).max(24),
   context: z.string().max(120),
   notes: z.string().max(1000)

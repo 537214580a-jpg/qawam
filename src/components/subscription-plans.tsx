@@ -31,7 +31,7 @@ export function SubscriptionPlans({plans,current,locale='ar'}:{plans:Plan[];curr
     <p className="mt-3 text-3xl font-extrabold">{plan.price_sar}<small className="mr-1 text-sm font-medium">SAR / {en?(plan.interval==='year'?'year':'month'):(plan.interval==='year'?'سنة':'شهر')}</small></p>
     <ul className="my-4 space-y-2 text-sm text-slate-600">{plan.features.map((feature,index)=><li key={index}>✓ {feature}</li>)}</ul>
     <button onClick={()=>requestPlan(plan.id)} disabled={pending||current===plan.id} className="primary-button w-full">
-     {pendingId===plan.id?'en?'Submitting…':'جارٍ تسجيل الطلب…':current===plan.id?(en?'Your current plan':'اشتراكك الحالي'):(en?'Request via WhatsApp':'اطلب الاشتراك عبر واتساب')}
+     {pendingId===plan.id?(en?'Submitting…':'جارٍ تسجيل الطلب…'):current===plan.id?(en?'Your current plan':'اشتراكك الحالي'):(en?'Request via WhatsApp':'اطلب الاشتراك عبر واتساب')}
     </button>
    </article>)}
   </div>

@@ -45,7 +45,7 @@ const conditionOptions = [
   ['other','حالة أخرى','Other condition']
 ] as const;
 
-export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { clientId: string; userId: string; locale: Locale; hasHealthConsent: boolean }) {
+export function HealthRecord({ clientId, userId, locale, hasHealthConsent, readOnly=false }: { clientId: string; userId: string; locale: Locale; hasHealthConsent: boolean; readOnly?: boolean }) {
   const en = locale === 'en';
   const db = createSupabaseBrowserClient();
   const [conditions, setConditions] = useState<Condition[]>([]);
@@ -264,11 +264,11 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
           <label className={label}>{t.choose}<select className={field} name="condition_code" defaultValue="" required><option value="" disabled>{t.choose}</option>{conditionOptions.map(([code, ar, enLabel])=><option value={code} key={code}>{en ? enLabel : ar}</option>)}</select></label>
           <label className={label}>{t.diagnosed}<input className={field} type="date" name="diagnosed_on"/></label>
           <label className={label+' sm:col-span-2'}>{t.details}<textarea className={field} name="details" rows={2} maxLength={3000}/></label>
-          <button className={button} disabled={saving || !hasHealthConsent}>{saving ? (en?'Saving…':'جاري الحفظ…') : t.add}</button>
+          <button className={button} disabled={saving || !hasHealthConsent || readOnly}>{saving ? (en?'Saving…':'جاري الحفظ…') : t.add}</button>
         </form>
         <div className="mt-5 divide-y divide-slate-100">{conditions.length === 0 ? <p className="py-3 text-sm text-slate-500">{t.noConditions}</p> : conditions.map(item=><article key={item.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
           <div><strong>{conditionOptions.find(([code])=>code===item.condition_code)?.[en?2:1] || item.condition_code}</strong>{item.details && <p className="mt-1 text-sm text-slate-500">{item.details}</p>}<p className="mt-1 text-xs text-slate-400">{item.status==='active'?(en?'Active':'نشطة'):(en?'Resolved':'منتهية')}</p></div>
-          {item.status==='active' && <button type="button" onClick={()=>void resolveCondition(item.id)} className="text-sm font-bold text-qawam-700 underline">{t.resolved}</button>}
+          {item.status==='active' && !readOnly && <button type="button" onClick={()=>void resolveCondition(item.id)} className="text-sm font-bold text-qawam-700 underline">{t.resolved}</button>}
         </article>)}</div>
       </section>
 
@@ -283,7 +283,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
           <label className={label}>{t.testedOn}<input className={field} type="date" name="tested_on"/></label>
           <label className={label+' sm:col-span-2'}>{t.doc}<select className={field} name="document_id" defaultValue=""><option value="">{t.noDoc}</option>{documents.map(doc=><option key={doc.id} value={doc.id}>{doc.original_filename}</option>)}</select></label>
           <p className="sm:col-span-2 text-xs text-slate-500">{t.confirmed}</p>
-          <button className={button} disabled={saving || !hasHealthConsent}>{saving ? (en?'Saving…':'جاري الحفظ…') : t.saveLab}</button>
+          <button className={button} disabled={saving || !hasHealthConsent || readOnly}>{saving ? (en?'Saving…':'جاري الحفظ…') : t.saveLab}</button>
         </form>
         <div className="mt-5 divide-y divide-slate-100">{labs.length===0 ? <p className="py-3 text-sm text-slate-500">{t.noLabs}</p> : labs.map(item=><article key={item.id} className="py-3">
           <div className="flex flex-wrap items-baseline justify-between gap-2"><strong>{item.test_name}</strong><span className="font-bold text-qawam-700">{item.result_value} {item.unit}</span></div>
@@ -301,7 +301,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
           <label className={label}>{t.unit}<input className={field} name="unit" maxLength={24} placeholder={en?'mmol/L, mg/dL, mmHg':'mmol/L أو mg/dL أو mmHg'} required/></label>
           <label className={label}>{t.context}<input className={field} name="context" maxLength={120}/></label>
           <label className={label}>{t.notes}<input className={field} name="notes" maxLength={1000}/></label>
-          <button className={button} disabled={saving || !hasHealthConsent}>{saving ? (en?'Saving…':'جاري الحفظ…') : t.saveReading}</button>
+          <button className={button} disabled={saving || !hasHealthConsent || readOnly}>{saving ? (en?'Saving…':'جاري الحفظ…') : t.saveReading}</button>
         </form>
         <div className="mt-5 divide-y divide-slate-100">{readings.length===0 ? <p className="py-3 text-sm text-slate-500">{t.noReadings}</p> : readings.map(item=><article key={item.id} className="py-3">
           <div className="flex flex-wrap justify-between gap-2"><strong>{item.reading_type==='glucose'?t.glucose:item.reading_type==='blood_pressure'?t.bp:t.other}</strong><span className="font-bold text-qawam-700">{item.value_primary}{item.value_secondary!==null?' / '+item.value_secondary:''} {item.unit}</span></div>
@@ -315,7 +315,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
           <label className={label}>{t.chooseFile}<input className={field} type="file" name="file" accept="application/pdf,image/jpeg,image/png,image/webp" required/></label>
           <label className={label}>{t.type}<select className={field} name="document_type" defaultValue="lab_result"><option value="lab_result">{t.labDocument}</option><option value="medical_report">{t.report}</option><option value="prescription">{t.prescription}</option><option value="other">{t.otherDocument}</option></select></label>
           <label className={label}>{t.date}<input className={field} type="date" name="document_date"/></label>
-          <button className={button+' self-end'} disabled={saving || !hasHealthConsent}>{saving ? (en?'Uploading…':'جاري الرفع…') : t.upload}</button>
+          <button className={button+' self-end'} disabled={saving || !hasHealthConsent || readOnly}>{saving ? (en?'Uploading…':'جاري الرفع…') : t.upload}</button>
         </form>
         <div className="mt-5 divide-y divide-slate-100">{documents.length===0 ? <p className="py-3 text-sm text-slate-500">{t.noDocuments}</p> : documents.map(doc=><article key={doc.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
           <div><strong>{doc.original_filename}</strong><p className="mt-1 text-xs text-slate-500">{doc.document_date || doc.created_at.slice(0,10)} · {doc.document_type}</p></div>

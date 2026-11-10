@@ -1,9 +1,9 @@
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Utensils, LineChart, MessageCircle, UserRound } from 'lucide-react';
+import { Home, Utensils, LineChart, MessageCircle, UserRound, HeartPulse } from 'lucide-react';
 import { LocaleSwitcher } from '@/components/locale-switcher';
-const items=[['/client','الرئيسية','Home',Home],['/client/food','التسجيل','Food logging',Utensils],['/client/progress','تقدمي','Progress',LineChart],['/client/chat','المحادثة','Chat',MessageCircle],['/client/settings','حسابي','Account',UserRound]] as const;
+const items=[['/client','الرئيسية','Home',Home],['/client/food','التسجيل','Food logging',Utensils],['/client/progress','تقدمي','Progress',LineChart],['/client/chat','المحادثة','Chat',MessageCircle],['/client/settings','حسابي','Account',UserRound],['/client/health','صحتي','Health record',HeartPulse]] as const;
 export function ClientShell({ children, name, brandPrimary='#0B2E1F', brandAccent='#1FA971', logoUrl, locale='ar' }: { children: React.ReactNode; name: string; brandPrimary?: string; brandAccent?: string; logoUrl?: string; locale?:'ar'|'en' }) {
  const path=usePathname();
  const english=locale==='en';

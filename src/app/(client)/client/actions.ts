@@ -102,30 +102,31 @@ export async function logFreeTextMeal(formData:FormData){
  const confirmed=formData.get('confirm')==='true';
  if(!parsed.success)return {error:'اكتب اسم الوجبة وكميات الأطعمة بالجرام.'};
  try{
-  const {db,clientId}=await currentClient();
+  const {db,clientId,locale}=await currentClient();
+  const message=(ar:string,en:string)=>locale==='en'?en:ar;
   const {data:client}=await db.from('clients').select('clinic_id').eq('id',clientId).single();
   const foodQuery=db.from('foods').select('id,name_ar,name_en,calories,protein_g,carbs_g,fat_g').eq('is_public',true);
   const {data:publicFoods,error:foodError}=await foodQuery.order('name_ar');
-  if(foodError)return {error:'تعذر البحث في قاعدة الأطعمة.'};
+  if(foodError)return {error:message('تعذر البحث في قاعدة الأطعمة.','Could not search the food database.')};
   let clinicFoods:MealTextFood[]=[];
   if(client?.clinic_id){
    const {data,error}=await db.from('foods').select('id,name_ar,name_en,calories,protein_g,carbs_g,fat_g').eq('clinic_id',client.clinic_id).order('name_ar');
-   if(error)return {error:'تعذر قراءة أطعمة العيادة.'};
+   if(error)return {error:message('تعذر قراءة أطعمة العيادة.','Could not load clinic foods.')};
    clinicFoods=(data||[]) as MealTextFood[];
   }
   const foods=[...(publicFoods||[]),...clinicFoods] as MealTextFood[];
   const text=normalizeMealText(parsed.data.text);
   const matches=findMealTextMatches(text,foods);
-  if(!matches.length)return {error:'ما تعرّفت على الأطعمة. جرّب أسماء مثل دجاج، أرز، بطاطس أو زبادي.'};
+  if(!matches.length)return {error:message('ما تعرّفت على الأطعمة. جرّب أسماء مثل دجاج، أرز، بطاطس أو زبادي.','No foods matched. Try a food name such as chicken, rice, potato, or yogurt.')};
   const unrecognized=findUnrecognizedMealWords(text,matches);
-  if(unrecognized.length)return {error:'تعذر التعرف على: '+unrecognized.join('، ')+'. حدّد الصنف أو احذفه قبل التسجيل.'};
+  if(unrecognized.length)return {error:locale==='en'?'Could not identify: '+unrecognized.join(', ')+'. Clarify or remove the item before logging.':'تعذر التعرف على: '+unrecognized.join('، ')+'. حدّد الصنف أو احذفه قبل التسجيل.'};
   const items:{food:MealTextFood;grams:number}[]=[];
   for(let index=0;index<matches.length;index++){
    const match=matches[index];
    const grams=parseMealGrams(text,match,index?matches[index-1].end:0,index+1<matches.length?matches[index+1].start:text.length);
-   if(!grams)return {error:'اكتب كمية كل صنف بالجرام، مثل: دجاج مطبوخ 150، أرز 150.'};
+   if(!grams)return {error:message('اكتب كمية كل صنف بالجرام، مثل: دجاج مطبوخ 150، أرز 150.','Enter the amount in grams for each food, for example: cooked chicken 150 g, rice 150 g.')};
    const {calories,protein_g,carbs_g,fat_g}=match.food;
-   if([calories,protein_g,carbs_g,fat_g].some(value=>value===null||!Number.isFinite(Number(value))))return {error:`لا توجد قيم غذائية مكتملة في قاعدة قوام للصنف: ${match.food.name_ar}.`};
+   if([calories,protein_g,carbs_g,fat_g].some(value=>value===null||!Number.isFinite(Number(value))))return {error:locale==='en'?'Complete nutrition values are missing in QAWAM for: '+(match.food.name_en||match.food.name_ar)+'.':'لا توجد قيم غذائية مكتملة في قاعدة قوام للصنف: '+match.food.name_ar+'.'};
    items.push({food:match.food,grams});
   }
   const nutritionRows=items.map(({food,grams})=>{const factor=grams/100;return {food_id:food.id,name:food.name_ar,grams,calories:Number(food.calories)*factor,protein_g:Number(food.protein_g)*factor,carbs_g:Number(food.carbs_g)*factor,fat_g:Number(food.fat_g)*factor};});
@@ -133,9 +134,9 @@ export async function logFreeTextMeal(formData:FormData){
   const preview={items:nutritionRows.map(item=>({name:item.name,grams:item.grams,calories:item.calories,protein:item.protein_g,carbs:item.carbs_g,fat:item.fat_g})),totals};
   if(!confirmed)return {preview};
   const {data:log,error:logError}=await db.from('meal_logs').insert({client_id:clientId,meal_type:parsed.data.mealType,source:'text'}).select('id').single();
-  if(logError||!log){console.error('QAWAM free-text meal log failed',logError?.code,logError?.message);return {error:'تعذر حفظ الوجبة. حاول مرة ثانية.'};}
+  if(logError||!log){console.error('QAWAM free-text meal log failed',logError?.code,logError?.message);return {error:message('تعذر حفظ الوجبة. حاول مرة ثانية.','Could not save the meal. Please try again.')};}
   const {error:itemError}=await db.from('meal_items').insert(nutritionRows.map(item=>({...item,meal_log_id:log.id})));
-  if(itemError){await db.from('meal_logs').delete().eq('id',log.id);console.error('QAWAM free-text meal items failed',itemError.code,itemError.message);return {error:'تعذر حفظ مكونات الوجبة.'};}
+  if(itemError){await db.from('meal_logs').delete().eq('id',log.id);console.error('QAWAM free-text meal items failed',itemError.code,itemError.message);return {error:message('تعذر حفظ مكونات الوجبة.','Could not save the meal items.')};}
   revalidatePath('/client');
   revalidatePath('/client/food');
   return {success:true};

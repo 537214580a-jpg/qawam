@@ -12,7 +12,7 @@ export async function addWater(formData:FormData){const p=waterSchema.safeParse(
 const recipeSchema=z.object({name:z.string().min(2).max(100),servings:z.coerce.number().positive().max(100),items:z.string().min(2)});
 export async function saveRecipe(formData:FormData){const p=recipeSchema.safeParse(Object.fromEntries(formData));if(!p.success)return {error:'أدخل اسم الوصفة ومكوناتها.'};let items:unknown;try{items=JSON.parse(p.data.items);}catch{return {error:'بيانات المكونات غير صالحة.'};}const itemSchema=z.array(z.object({foodId:z.string().uuid(),grams:z.number().positive().max(5000)})).min(1).max(50);const check=itemSchema.safeParse(items);if(!check.success)return {error:'تحقق من مكونات الوصفة.'};try{const {db,userId}=await currentClient();const {data:recipe,error}=await db.from('recipes').insert({user_id:userId,name:p.data.name,servings:p.data.servings,is_usual:true}).select('id').single();if(error||!recipe)return {error:'تعذر حفظ الوصفة.'};const {error:itemError}=await db.from('recipe_items').insert(check.data.map(i=>({recipe_id:recipe.id,food_id:i.foodId,grams:i.grams})));if(itemError)return {error:'تعذر حفظ مكونات الوصفة.'};revalidatePath('/client/food');return {success:true};}catch(error){return {error:error instanceof Error?error.message:'تعذر حفظ الوصفة.'};}}
 
-type MealTextFood={id:string;name_ar:string;name_en:string|null;calories:number;protein_g:number;carbs_g:number;fat_g:number};
+type MealTextFood={id:string;name_ar:string;name_en:string|null;calories:number|null;protein_g:number|null;carbs_g:number|null;fat_g:number|null};
 type MealTextMatch={start:number;end:number;food:MealTextFood};
 const foodAliases=[
  {target:'صدر دجاج مطهو',names:['دجاج مطبوخ','دجاج مطهو','صدر دجاج مطبوخ','صدر دجاج','دجاج','chicken breast','cooked chicken','chicken']},
@@ -86,6 +86,7 @@ function parseMealGrams(text:string,match:MealTextMatch,previousEnd:number,nextS
 const freeTextMealSchema=z.object({text:z.string().trim().min(3).max(1000),mealType:z.string().trim().min(1).max(40)});
 export async function logFreeTextMeal(formData:FormData){
  const parsed=freeTextMealSchema.safeParse({text:formData.get('text'),mealType:formData.get('mealType')});
+ const confirmed=formData.get('confirm')==='true';
  if(!parsed.success)return {error:'اكتب اسم الوجبة وكميات الأطعمة بالجرام.'};
  try{
   const {db,clientId}=await currentClient();
@@ -108,15 +109,20 @@ export async function logFreeTextMeal(formData:FormData){
    const match=matches[index];
    const grams=parseMealGrams(text,match,index?matches[index-1].end:0,index+1<matches.length?matches[index+1].start:text.length);
    if(!grams)return {error:'اكتب كمية كل صنف بالجرام، مثل: دجاج مطبوخ 150، أرز 150.'};
+   const {calories,protein_g,carbs_g,fat_g}=match.food;
+   if([calories,protein_g,carbs_g,fat_g].some(value=>value===null||!Number.isFinite(Number(value))))return {error:`لا توجد قيم غذائية مكتملة في قاعدة قوام للصنف: ${match.food.name_ar}.`};
    items.push({food:match.food,grams});
   }
+  const nutritionRows=items.map(({food,grams})=>{const factor=grams/100;return {food_id:food.id,name:food.name_ar,grams,calories:Number(food.calories)*factor,protein_g:Number(food.protein_g)*factor,carbs_g:Number(food.carbs_g)*factor,fat_g:Number(food.fat_g)*factor};});
+  const totals=nutritionRows.reduce((total,item)=>({calories:total.calories+item.calories,protein:total.protein+item.protein_g,carbs:total.carbs+item.carbs_g,fat:total.fat+item.fat_g}),{calories:0,protein:0,carbs:0,fat:0});
+  const preview={items:items.map(({food,grams})=>({name:food.name_ar,grams})),totals};
+  if(!confirmed)return {preview};
   const {data:log,error:logError}=await db.from('meal_logs').insert({client_id:clientId,meal_type:parsed.data.mealType,source:'text'}).select('id').single();
   if(logError||!log){console.error('QAWAM free-text meal log failed',logError?.code,logError?.message);return {error:'تعذر حفظ الوجبة. حاول مرة ثانية.'};}
-  const rows=items.map(({food,grams})=>{const factor=grams/100;return {meal_log_id:log.id,food_id:food.id,name:food.name_ar,grams,calories:Number(food.calories)*factor,protein_g:Number(food.protein_g)*factor,carbs_g:Number(food.carbs_g)*factor,fat_g:Number(food.fat_g)*factor};});
-  const {error:itemError}=await db.from('meal_items').insert(rows);
+  const {error:itemError}=await db.from('meal_items').insert(nutritionRows.map(item=>({...item,meal_log_id:log.id})));
   if(itemError){await db.from('meal_logs').delete().eq('id',log.id);console.error('QAWAM free-text meal items failed',itemError.code,itemError.message);return {error:'تعذر حفظ مكونات الوجبة.'};}
   revalidatePath('/client');
   revalidatePath('/client/food');
-  return {success:true,items:items.map(({food,grams})=>({name:food.name_ar,grams})),totals:rows.reduce((total,item)=>({calories:total.calories+item.calories,protein:total.protein+item.protein_g,carbs:total.carbs+item.carbs_g,fat:total.fat+item.fat_g}),{calories:0,protein:0,carbs:0,fat:0})};
+  return {success:true};
  }catch(error){console.error('QAWAM free-text meal unexpected failure',error);return {error:error instanceof Error?error.message:'تعذر تسجيل الوجبة. تأكد من دخولك وحاول مرة ثانية.'};}
 }

@@ -7,7 +7,7 @@ export function FreeTextMeal({locale='ar'}:{locale?:'ar'|'en'}){const en=locale=
  const router=useRouter();
  const [pending,start]=useTransition();
  const [text,setText]=useState('');
- const [mealType,setMealType]=useState(en?'Main meal':'وجبة رئيسية');
+ const [mealType,setMealType]=useState('وجبة رئيسية');
  const [message,setMessage]=useState('');
  function submit(event:FormEvent<HTMLFormElement>){
   event.preventDefault();
@@ -18,9 +18,9 @@ export function FreeTextMeal({locale='ar'}:{locale?:'ar'|'en'}){const en=locale=
   start(async()=>{
    const result=await logFreeTextMeal(formData);
    if(!result.items||!result.totals){setMessage('error'in result&&result.error?result.error:en?'Could not log the meal. Please try again.':'تعذر تسجيل الوجبة. حاول مرة ثانية.');return;}
-   const detected=result.items.map(item=>`${item.name} ${item.grams}${en?' g':'غ'}`).join('، ');
+   const detected=result.items.map(item=>`${item.name} ${item.grams}${en?' g':'غ'}`).join(en?', ':'، ');
    const totals=result.totals;
-   setMessage(`سجلنا: ${detected} — ${Math.round(totals.calories)} ${en?'kcal, protein':'سعرة، بروتين'} ${Math.round(totals.protein)}${en?' g, carbs ':'غ، كارب '}${Math.round(totals.carbs)}${en?' g, fat ':'غ، دهون '}${Math.round(totals.fat)}${en?' g':'غ'}.`);
+   setMessage(`${en?'Logged':'سجلنا'}: ${detected} — ${Math.round(totals.calories)} ${en?'kcal, protein':'سعرة، بروتين'} ${Math.round(totals.protein)}${en?' g, carbs ':'غ، كارب '}${Math.round(totals.carbs)}${en?' g, fat ':'غ، دهون '}${Math.round(totals.fat)}${en?' g':'غ'}.`);
    setText('');
    router.refresh();
   });
@@ -35,7 +35,7 @@ export function FreeTextMeal({locale='ar'}:{locale?:'ar'|'en'}){const en=locale=
    <textarea className="field min-h-24 resize-y" value={text} onChange={event=>setText(event.target.value)} maxLength={1000} required placeholder={en?"Example: cooked chicken 150 g, rice 150 g":"مثال: دجاج مطبوخ 150، أرز 150"}/>
    <div className="flex flex-col gap-3 sm:flex-row">
     <select className="field sm:max-w-56" value={mealType} onChange={event=>setMealType(event.target.value)} aria-label={en?"Meal type":"نوع الوجبة"}>
-     <option>{en?'Breakfast':'إفطار'}</option><option>{en?'Lunch':'غداء'}</option><option>{en?'Dinner':'عشاء'}</option><option>{en?'Snack':'وجبة خفيفة'}</option><option>{en?'Main meal':'وجبة رئيسية'}</option>
+     <option value="إفطار">{en?'Breakfast':'إفطار'}</option><option value="غداء">{en?'Lunch':'غداء'}</option><option value="عشاء">{en?'Dinner':'عشاء'}</option><option value="وجبة خفيفة">{en?'Snack':'وجبة خفيفة'}</option><option value="وجبة رئيسية">{en?'Main meal':'وجبة رئيسية'}</option>
     </select>
     <button disabled={pending||text.trim().length<3} className="primary-button flex-1">{pending?(en?'Matching and saving…':'جارٍ التعرف والحفظ…'):(en?'Match and log meal':'تعرّف على الوجبة وسجّلها')}</button>
    </div>

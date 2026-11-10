@@ -83,6 +83,19 @@ function parseMealGrams(text:string,match:MealTextMatch,previousEnd:number,nextS
  const grams=Number(raw.replace(',','.'));
  return Number.isFinite(grams)&&grams>0&&grams<=5000?grams:null;
 }
+
+function findUnrecognizedMealWords(text:string,matches:MealTextMatch[]){
+ const chars=Array.from(text);
+ for(const match of matches)for(let index=match.start;index<match.end;index++)chars[index]=' ';
+ const stopWords=new Set([
+  'اكل','اكلت','تناولت','شربت','الوجبه','وجبه','اليوم','مع','و','من','في','على','الى','ثم','كان','كانت',
+  'i','ate','had','drank','with','and','a','an','the','meal','today',
+  'g','gram','grams','غ','غرام','جرام','جم'
+ ]);
+ return Array.from(new Set((chars.join('').match(/[\\p{L}\\p{N}]+/gu)||[])
+  .filter(word=>!/^\\d+(?:[.,]\\d+)?$/.test(word)&&!stopWords.has(word))));
+}
+
 const freeTextMealSchema=z.object({text:z.string().trim().min(3).max(1000),mealType:z.string().trim().min(1).max(40)});
 export async function logFreeTextMeal(formData:FormData){
  const parsed=freeTextMealSchema.safeParse({text:formData.get('text'),mealType:formData.get('mealType')});
@@ -104,6 +117,8 @@ export async function logFreeTextMeal(formData:FormData){
   const text=normalizeMealText(parsed.data.text);
   const matches=findMealTextMatches(text,foods);
   if(!matches.length)return {error:'ما تعرّفت على الأطعمة. جرّب أسماء مثل دجاج، أرز، بطاطس أو زبادي.'};
+  const unrecognized=findUnrecognizedMealWords(text,matches);
+  if(unrecognized.length)return {error:'تعذر التعرف على: '+unrecognized.join('، ')+'. حدّد الصنف أو احذفه قبل التسجيل.'};
   const items:{food:MealTextFood;grams:number}[]=[];
   for(let index=0;index<matches.length;index++){
    const match=matches[index];

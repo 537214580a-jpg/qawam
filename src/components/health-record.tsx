@@ -146,6 +146,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
 
   async function addCondition(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setError(''); setNotice('');
     const data = new FormData(event.currentTarget);
     const parsed = conditionSchema.safeParse({
@@ -159,7 +160,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
     const { error: insertError } = await db.from('health_conditions').insert({ ...fields, diagnosed_on: diagnosed_on || null, client_id: clientId, created_by: userId });
     setSaving(false);
     if (insertError) { setError(insertError.code === '23505' ? (en ? 'This active condition is already recorded.' : 'الحالة النشطة مسجلة مسبقًا.') : insertError.message); return; }
-    event.currentTarget.reset(); setNotice(t.saved); await load();
+    form.reset(); setNotice(t.saved); await load();
   }
 
   async function resolveCondition(id: string) {
@@ -171,6 +172,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
 
   async function addLab(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setError(''); setNotice('');
     const data = new FormData(event.currentTarget);
     const parsed = labSchema.safeParse({
@@ -189,11 +191,12 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
     });
     setSaving(false);
     if (insertError) { setError(insertError.message); return; }
-    event.currentTarget.reset(); setNotice(t.saved); await load();
+    form.reset(); setNotice(t.saved); await load();
   }
 
   async function addReading(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setError(''); setNotice('');
     const data = new FormData(event.currentTarget);
     const parsed = readingSchema.safeParse({
@@ -211,7 +214,7 @@ export function HealthRecord({ clientId, userId, locale, hasHealthConsent }: { c
     });
     setSaving(false);
     if (insertError) { setError(insertError.message); return; }
-    event.currentTarget.reset(); setNotice(t.saved); await load();
+    form.reset(); setNotice(t.saved); await load();
   }
 
   async function uploadDocument(event: FormEvent<HTMLFormElement>) {

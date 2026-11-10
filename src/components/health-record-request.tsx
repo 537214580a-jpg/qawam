@@ -14,6 +14,7 @@ export function HealthRecordRequest({clientId,userId,clinicId,locale}:{clientId:
   const en=locale==='en';
   const db=createSupabaseBrowserClient();
   const [rows,setRows]=useState<RequestRow[]>([]);
+  const [preferredLanguage,setPreferredLanguage]=useState<'ar'|'en'>(locale);
   const [loading,setLoading]=useState(true);
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState('');
@@ -56,7 +57,7 @@ export function HealthRecordRequest({clientId,userId,clinicId,locale}:{clientId:
   useEffect(()=>{void load();},[load]);
   async function submit(){
     setError('');setMessage('');
-    const parsed=requestSchema.safeParse({preferred_language:locale,include_originals:(document.getElementById('include-health-originals') as HTMLInputElement | null)?.checked||false});
+    const parsed=requestSchema.safeParse({preferred_language:preferredLanguage,include_originals:(document.getElementById('include-health-originals') as HTMLInputElement | null)?.checked||false});
     if(!parsed.success){setError(labels.failed);return;}
     setSaving(true);
     const {error:insertError}=await db.from('health_record_requests').insert({
@@ -75,7 +76,7 @@ export function HealthRecordRequest({clientId,userId,clinicId,locale}:{clientId:
     {message&&<p role="status" className="mt-3 rounded-xl bg-emerald-50 p-3 text-sm text-emerald-800">{message}</p>}
     <div className="mt-4 grid gap-3 sm:grid-cols-2">
       <label className="grid gap-1.5 text-sm font-semibold text-slate-700">{labels.language}
-        <select className="min-h-11 rounded-xl border border-slate-200 bg-white px-3" value={locale} onChange={()=>{}}>
+        <select className="min-h-11 rounded-xl border border-slate-200 bg-white px-3" value={preferredLanguage} onChange={(event)=>setPreferredLanguage(event.target.value as 'ar'|'en')}>
           <option value="ar">{labels.arabic}</option><option value="en">{labels.english}</option>
         </select>
       </label>

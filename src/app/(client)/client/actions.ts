@@ -15,9 +15,9 @@ export async function saveRecipe(formData:FormData){const p=recipeSchema.safePar
 type MealTextFood={id:string;name_ar:string;name_en:string|null;calories:number|null;protein_g:number|null;carbs_g:number|null;fat_g:number|null};
 type MealTextMatch={start:number;end:number;food:MealTextFood};
 const foodAliases=[
- {target:'صدر دجاج مطهو',names:['دجاج مطبوخ','دجاج مطهو','صدر دجاج مطبوخ','صدر دجاج','دجاج','chicken breast','cooked chicken','chicken']},
- {target:'أرز أبيض مطهو',names:['أرز مطبوخ','ارز مطبوخ','رز مطبوخ','أرز','ارز','رز','rice']},
- {target:'بطاطس مسلوقة',names:['بطاطس مسلوقة','بطاطس','بطاطا','potato','potatoes']},
+ {target:'دجاج مطبوخ',names:['دجاج مطبوخ','دجاج مطهو','صدر دجاج مطبوخ','صدر دجاج','دجاج','chicken breast','cooked chicken','chicken']},
+ {target:'ارز ابيض مطبوخ',names:['أرز مطبوخ','ارز مطبوخ','رز مطبوخ','أرز','ارز','رز','rice']},
+ {target:'البطاطس',names:['بطاطس مسلوقة','بطاطس','بطاطا','potato','potatoes']},
  {target:'بيض كامل مطهو',names:['بيض مطبوخ','بيض كامل','بيض','بيضة','egg','eggs']},
  {target:'شوفان جاف',names:['شوفان','اوفان','oats','oatmeal']},
  {target:'زبادي يوناني قليل الدسم',names:['زبادي يوناني','زبادي','yogurt','greek yogurt']},

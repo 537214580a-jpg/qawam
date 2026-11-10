@@ -1,6 +1,7 @@
 'use server';
 import { z } from 'zod';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { cookies } from 'next/headers';
 
 const schema = z.object({ contact: z.string().trim().min(5).max(254), channel: z.enum(['email','sms']) });
 export async function sendOtp(formData: FormData) {
@@ -23,5 +24,8 @@ export async function verifyOtp(formData: FormData) {
   const { error } = channel === 'email'
     ? await supabase.auth.verifyOtp({ email: contact, token, type: 'email' })
     : await supabase.auth.verifyOtp({ phone: contact, token, type: 'sms' });
-  return error ? { error: 'الرمز غير صحيح أو انتهت صلاحيته.' } : { success: true };
+  if(error)return { error: 'الرمز غير صحيح أو انتهت صلاحيته.' };
+  const locale=cookies().get('qawam_locale')?.value;
+  if(locale==='ar'||locale==='en')await supabase.rpc('set_my_locale',{p_locale:locale});
+  return { success: true };
 }

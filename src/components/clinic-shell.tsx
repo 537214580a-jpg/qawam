@@ -6,7 +6,7 @@ import { LocaleSwitcher } from '@/components/locale-switcher';
 const nav=[['/clinic','نظرة عامة','Overview',LayoutDashboard],['/clinic/clients','العملاء','Clients',Users],['/clinic/plans','الخطط الغذائية','Nutrition plans',ClipboardList],['/clinic/foods','مكتبة الأطعمة','Food library',Utensils],['/clinic/analytics','التحليلات','Analytics',BarChart3],['/clinic/team','الفريق','Team',Settings],['/clinic/settings','الهوية البصرية','Branding',Palette]] as const;
 export function ClinicShell({ children, name, admin=false, locale='ar' }: { children: React.ReactNode; name: string; admin?: boolean; locale?:'ar'|'en' }) {
  const path=usePathname();const english=locale==='en';
- const links=admin?[['/admin','إدارة المنصة','Platform admin',Shield] as const,...nav]:nav;
+ const links=admin?[['/admin','إدارة المنصة','Platform admin',Shield] as const,['/admin/health-requests','طلبات الملف الصحي','Health record requests',ClipboardList] as const,...nav]:nav;
  return <div dir={english?'ltr':'rtl'} className="min-h-screen bg-qawam-50 md:flex">
   <aside className="hidden w-64 shrink-0 flex-col bg-qawam-950 p-5 text-white md:flex">
    <Link href={admin?'/admin':'/clinic'} className="mb-8 flex items-center gap-3 text-xl font-extrabold"><span className="grid h-11 w-11 place-items-center rounded-xl bg-qawam-500 text-2xl">ق</span>قوام</Link>
@@ -21,7 +21,7 @@ export function ClinicShell({ children, name, admin=false, locale='ar' }: { chil
     <div className="flex items-center gap-3"><span className="text-sm font-bold">{name || (english?'Welcome':'مرحبًا')}</span><LocaleSwitcher locale={locale}/></div>
    </header>
    <main className="mx-auto max-w-7xl p-4 pb-24 md:p-8">{children}</main>
-   <nav aria-label={english?'Main navigation':'التنقل الرئيسي'} className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t bg-white p-2 md:hidden">{nav.slice(0,5).map(([href,labelAr,labelEn,Icon])=><Link key={href} href={href} className={`flex flex-col items-center gap-1 p-1 text-[10px] ${path===href?'text-qawam-700':'text-slate-400'}`}><Icon size={19}/>{english?labelEn:labelAr}</Link>)}</nav>
+   <nav aria-label={english?'Main navigation':'التنقل الرئيسي'} className="fixed inset-x-0 bottom-0 z-20 flex justify-around border-t bg-white p-2 md:hidden">{(admin?links.slice(0,5):nav.slice(0,5)).map(([href,labelAr,labelEn,Icon])=><Link key={href} href={href} className={`flex flex-col items-center gap-1 p-1 text-[10px] ${path===href?'text-qawam-700':'text-slate-400'}`}><Icon size={19}/>{english?labelEn:labelAr}</Link>)}</nav>
   </div>
  </div>;
 }

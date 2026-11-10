@@ -1,7 +1,7 @@
 -- Canonical food records from the supplied Database worksheet.
 -- Nutrients are normalized to 100 g using the row's Quantity (g).
--- Exact duplicate rows are deduplicated. Both strawberry source values are retained with clear labels.
--- The mint row with missing carbohydrates is excluded.
+-- Exact duplicate rows are deduplicated. Strawberry source variants are disambiguated in the names.
+-- The mint row with missing carbohydrates is excluded instead of assigning a made-up value.
 update public.foods set is_public=false, updated_at=now() where clinic_id is null and source='QAWAM reference data' and is_public=true;
 
 insert into public.foods (name_ar,name_en,calories,protein_g,carbs_g,fat_g,fiber_g,source,is_public,clinic_id,created_by)
@@ -297,4 +297,4 @@ from (values
 ('اعشاب ايطاليه', 272.727273, 9.090909, 60, 0, 'الملف المرفق، Database!293; https://drive.google.com/file/d/1eMDPs9dBMbnJnUXQszWkSDHXC5g69Wnp/view?usp=drive_link'),
 ('ورشستر', 0, 0, 0, 0, 'الملف المرفق، Database!294; لا يوجد مرجع خارجي في الملف')
 ) as incoming(name_ar,calories,protein_g,carbs_g,fat_g,source)
-where not exists (select 1 from public.foods existing where existing.name_ar=incoming.name_ar and existing.source=incoming.source);
+on conflict (name_ar) where clinic_id is null do update set name_en=excluded.name_en,calories=excluded.calories,protein_g=excluded.protein_g,carbs_g=excluded.carbs_g,fat_g=excluded.fat_g,fiber_g=null,source=excluded.source,is_public=true,updated_at=now();
